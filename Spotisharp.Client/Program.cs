@@ -6,7 +6,17 @@ using Spotisharp.Client.Resolvers;
 using Spotisharp.Client.Services;
 using System.Collections.Concurrent;
 using System.Reflection;
+using Microsoft.Extensions.Configuration;
 using VideoLibrary;
+
+IConfiguration configuration = new ConfigurationBuilder()
+    .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+    //.AddJsonFile(Path.Combine(".config", "spotisharp", "config.json"), optional: true, reloadOnChange: true)
+    .AddJsonFile(Path.Combine("options.config.json"), optional: true, reloadOnChange: true)
+    .Build();
+
+OptionsConfig? options = configuration.GetSection("Options").Get<OptionsConfig>();
+
 
 CConsole.WriteLine("Spotisharp v" + 
                    Assembly.GetExecutingAssembly().GetName().Version!.ToString());
@@ -157,7 +167,14 @@ await Task.WhenAll(Enumerable.Range(0, workersCount).Select(async workerId =>
 
         string convertedFilePath = Path.Combine(trackDir.FullName, fullName) + ".mp3";
 
-        if (File.Exists(convertedFilePath))
+        FileInfo fileInfo  = new FileInfo(convertedFilePath);
+        
+        bool skipFile = false;
+        
+        if (options is { ScanLibrary: true } && category == SpotifyBrowseCategory.Playlist)
+            skipFile = options.Library.Exists(fileInfo.Name);
+
+        if (fileInfo.Exists || skipFile)
         {
             CConsole.Overwrite($"W #{workerId} ::: Skipping: {fullName}", positionY);
             await Task.Delay(250);
@@ -291,7 +308,7 @@ await Task.WhenAll(Enumerable.Range(0, workersCount).Select(async workerId =>
             file.Tag.Track = Convert.ToUInt32(trackInfo.TrackNumber);
             file.Tag.Disc = Convert.ToUInt32(trackInfo.DiscNumber);
             file.Tag.Year = Convert.ToUInt32(trackInfo.Year);
-            file.Tag.Comment = trackInfo.Url;
+            //file.Tag.Comment = trackInfo.Url;
             file.Tag.Genres = new string[] { trackInfo.Genres };
             file.Tag.Pictures = new TagLib.Picture[]
             {

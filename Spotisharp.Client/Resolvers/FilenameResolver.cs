@@ -6,8 +6,11 @@ public static class FilenameResolver
     {
         char[] forbiddenChars = 
         {   '<', '>', ':',
-            '\"', '/', '\\', 
-            '|', '?', '*'
+            '"', '/', '\\', 
+            '|', '?', '*',
+            '&', '+', ',',
+            ';', '@', '?',
+            '$', '%', '#'
         };
         return string.Create(input.Length, input, (chars, buffer) =>
         {

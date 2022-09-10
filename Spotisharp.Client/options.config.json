@@ -1,0 +1,19 @@
+﻿{
+  "Options" : {
+    "ScanLibrary": true,
+    "IgnoreAlbums": true, 
+    "Library": {
+      "Filter": "*.mp3",
+      "Folders": [
+        "M:\\Music\\SpotiSharp",
+        "C:\\Users\\Public\\Music",
+        "M:\\Music\\m"
+      ]
+    },
+    "Requests": [
+      "https://spotify.com/",
+      "https://spotify.com/",
+      "https://spotify.com/"
+    ]
+  }
+}
