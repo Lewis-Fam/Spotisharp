@@ -1,6 +1,9 @@
-﻿using Spotisharp.Client.Resolvers;
+﻿using Spotisharp.Client.Enums;
+using Spotisharp.Client.Resolvers;
+
 using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
+
 using VideoLibrary;
 using VideoLibrary.Exceptions;
 
@@ -14,8 +17,8 @@ public static class YoutubeService
     {
         string[] urls = new string[limit];
 
-        string safeSearchQuery = "https://www.youtube.com/results?search_query=" + 
-            FilenameResolver.RemoveUrlSpecialChars(input);
+        string safeSearchQuery = "https://www.youtube.com/results?search_query=" +
+                                 FilenameResolver.RemoveForbiddenChars(input, StringType.Url);
 
         string response = await _httpClient.GetStringAsync(safeSearchQuery);
 
@@ -85,7 +88,6 @@ public static class YoutubeService
                         int bytesCopied = 0;
                         do
                         {
-
                             bytesCopied = await stream.ReadAsync(buffer, 0, buffer.Length);
                             output.Write(buffer, 0, bytesCopied);
                             if (progress != null)
@@ -93,7 +95,6 @@ public static class YoutubeService
                                 progress.Report(Tuple.Create(totalBytesCopied, fileSize));
                             }
                             totalBytesCopied += bytesCopied;
-
                         } while (bytesCopied > 0);
                     }
                 }

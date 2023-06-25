@@ -1,13 +1,15 @@
 ﻿using Spotisharp.Client.Enums;
+
 using System.Text.RegularExpressions;
 
 namespace Spotisharp.Client.Resolvers;
 
 public static class SpotifyUriResolver
 {
-    private static readonly Regex _spotifyUrlRegex = new Regex(@"http(s)?\:\/\/open\.spotify\.com\/(track|playlist|album)\/.{22}");
+    private static readonly Regex _spotifyUrlRegex = new Regex(@"http(s)?\:\/\/open\.spotify\.com\/(track|playlist|album)\/[0-9A-Za-z]{22}");
+
     private static readonly Regex _spotifyUrnRegex = new Regex(@"spotify\:(track|playlist|album)\:[0-9A-Za-z]{22}");
-    
+
     public static bool IsUriValid(string uri)
     {
         return _spotifyUrlRegex.IsMatch(uri) || _spotifyUrnRegex.IsMatch(uri);
@@ -19,7 +21,7 @@ public static class SpotifyUriResolver
         {
             return SpotifyUriType.Url;
         }
-        else if(_spotifyUrnRegex.IsMatch(uri))
+        else if (_spotifyUrnRegex.IsMatch(uri))
         {
             return SpotifyUriType.Urn;
         }

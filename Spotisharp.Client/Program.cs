@@ -11,14 +11,14 @@ using VideoLibrary;
 
 IConfiguration configuration = new ConfigurationBuilder()
     .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+
     //.AddJsonFile(Path.Combine(".config", "spotisharp", "config.json"), optional: true, reloadOnChange: true)
     .AddJsonFile(Path.Combine("options.config.json"), optional: true, reloadOnChange: true)
     .Build();
 
 OptionsConfig? options = configuration.GetSection("Options").Get<OptionsConfig>();
 
-
-CConsole.WriteLine("Spotisharp v" + 
+CConsole.WriteLine("Spotisharp v" +
                    Assembly.GetExecutingAssembly().GetName().Version!.ToString());
 
 CConsole.WriteLine($"(\u00a9) 2020-2022 Damian Ziolo");
@@ -50,7 +50,6 @@ if (ConfigManager.Properties.CheckUpdates)
     }
 }
 
-
 ConfigManager.Properties.EnsureDirsExist();
 
 if (!FFmpegService.IsFFmpegInstalled())
@@ -71,7 +70,7 @@ else
     input = args[0];
 }
 
-if(input == string.Empty)
+if (input == string.Empty)
 {
     CConsole.WriteLine("Input has to contain something", CConsoleType.Error);
     return;
@@ -82,7 +81,7 @@ CConsole.WriteLine("Input: " + input, CConsoleType.Debug);
 CConsole.WriteLine("Logging to Spotify");
 SpotifyClient? client = await SpotifyAuthentication.CreateSpotifyClient();
 
-if (client == null) 
+if (client == null)
 {
     CConsole.WriteLine("Couldn't sign in to Spotify. Exiting", CConsoleType.Error);
     return;
@@ -132,7 +131,7 @@ if (args.Length == 2)
 
 int workersCount = ConfigManager.Properties.WorkersCount;
 
-if(workersCount < 1 || workersCount > 4)
+if (workersCount < 1 || workersCount > 4)
 {
     CConsole.WriteLine("WorkersCount has to be set in range of 1-4. Changing to 4", CConsoleType.Warn);
     workersCount = 4;
@@ -152,8 +151,8 @@ await Task.WhenAll(Enumerable.Range(0, workersCount).Select(async workerId =>
     int positionY = topCursorPosition + workerId;
     while (trackInfoBag.TryTake(out TrackInfoModel? trackInfo))
     {
-        string safeArtistName = FilenameResolver.RemoveForbiddenChars(trackInfo.Artist);
-        string safeTitle = FilenameResolver.RemoveForbiddenChars(trackInfo.Title);
+        string safeArtistName = FilenameResolver.RemoveForbiddenChars(trackInfo.Artist, StringType.Filename);
+        string safeTitle = FilenameResolver.RemoveForbiddenChars(trackInfo.Title, StringType.Filename);
         string fullName = safeArtistName + " - " + safeTitle;
 
         DirectoryInfo trackDir = Directory.CreateDirectory
@@ -161,16 +160,16 @@ await Task.WhenAll(Enumerable.Range(0, workersCount).Select(async workerId =>
                     Path.Combine
                     (
                         ConfigManager.Properties.MusicDirectory,
-                        saveFolder ?? FilenameResolver.RemoveForbiddenChars(trackInfo.Playlist)
+                        saveFolder ?? FilenameResolver.RemoveForbiddenChars(trackInfo.Playlist, StringType.Filename)
                     )
                 );
 
         string convertedFilePath = Path.Combine(trackDir.FullName, fullName) + ".mp3";
 
-        FileInfo fileInfo  = new FileInfo(convertedFilePath);
-        
+        FileInfo fileInfo = new FileInfo(convertedFilePath);
+
         bool skipFile = false;
-        
+
         if (options is { ScanLibrary: true } && category == SpotifyBrowseCategory.Playlist)
             skipFile = options.Library.Exists(fileInfo.Name);
 
@@ -182,7 +181,7 @@ await Task.WhenAll(Enumerable.Range(0, workersCount).Select(async workerId =>
         }
 
         CConsole.WriteLine($"W #{workerId} ::: Getting Lyrics ::: {fullName}", CConsoleType.Debug);
-        Task<string> lyricsTask = 
+        Task<string> lyricsTask =
             MusixmatchService.SearchLyricsFromText(fullName);
 
         CConsole.WriteLine($"W #{workerId} ::: Getting youtube links ::: {fullName}", CConsoleType.Debug);
@@ -190,9 +189,9 @@ await Task.WhenAll(Enumerable.Range(0, workersCount).Select(async workerId =>
 
         YouTubeVideo? audioTrack = null;
 
-        for(int i = 0; i < results.Length; i++)
+        for (int i = 0; i < results.Length; i++)
         {
-            if(results[i] == string.Empty)
+            if (results[i] == string.Empty)
             {
                 continue;
             }
@@ -202,10 +201,10 @@ await Task.WhenAll(Enumerable.Range(0, workersCount).Select(async workerId =>
             if (audioTrack != null)
             {
                 break;
-            }   
+            }
         }
 
-        if(audioTrack == null)
+        if (audioTrack == null)
         {
             CConsole.Overwrite
             (
@@ -248,7 +247,7 @@ await Task.WhenAll(Enumerable.Range(0, workersCount).Select(async workerId =>
                     writeToFile: false
                 );
             }));
-        
+
         CConsole.WriteLine($"W #{workerId} ::: Converting ::: {fullName}", CConsoleType.Debug);
 
         using (audioStream)
@@ -256,13 +255,13 @@ await Task.WhenAll(Enumerable.Range(0, workersCount).Select(async workerId =>
             await FFmpegService.ConvertStreamAsync(audioStream, convertedFilePath,
                 new Progress<Tuple<TimeSpan, TimeSpan>>
                 (
-                    pValues => 
+                    pValues =>
                     {
                         int duration = (int)pValues.Item2.TotalSeconds;
                         int position = (int)pValues.Item1.TotalSeconds;
                         int percentage = 0;
 
-                        if(duration > 0)
+                        if (duration > 0)
                         {
                             percentage = (int)Math.Ceiling(100.0 * position / duration);
 
@@ -308,6 +307,7 @@ await Task.WhenAll(Enumerable.Range(0, workersCount).Select(async workerId =>
             file.Tag.Track = Convert.ToUInt32(trackInfo.TrackNumber);
             file.Tag.Disc = Convert.ToUInt32(trackInfo.DiscNumber);
             file.Tag.Year = Convert.ToUInt32(trackInfo.Year);
+
             //file.Tag.Comment = trackInfo.Url;
             file.Tag.Genres = new string[] { trackInfo.Genres };
             file.Tag.Pictures = new TagLib.Picture[]
