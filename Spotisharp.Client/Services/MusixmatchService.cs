@@ -11,7 +11,11 @@ public static class MusixmatchService
         string searchQuery = _siteUrl + "/search/" + query;
         using (HttpClient client = new HttpClient())
         {
-            string response = await client.GetStringAsync(searchQuery);
+            var responseMessage = await client.GetAsync(searchQuery);
+            if (!responseMessage.IsSuccessStatusCode)
+                return string.Empty;
+
+            var response = await responseMessage.Content.ReadAsStringAsync();
             HtmlDocument htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(response);
             
